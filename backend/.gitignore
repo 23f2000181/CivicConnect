@@ -1,0 +1,16 @@
+# MongoDB
+/data/
+/mongodb/
+
+# Uploads
+/uploads/
+public/uploads/
+
+# SSL certificates
+/ssl/
+*.p12
+*.pfx
+
+# PM2
+pm2.log
+ecosystem.config.js
