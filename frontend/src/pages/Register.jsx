@@ -3,24 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'citizen' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,11 +26,8 @@ const Register = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       const result = await register(registerData);
-      if (result.success) {
-        navigate('/');
-      } else {
-        setError(result.message || 'Registration failed');
-      }
+      if (result.success) navigate('/');
+      else setError(result.message || 'Registration failed');
     } catch (err) {
       setError('An error occurred during registration');
     } finally {
@@ -49,80 +36,45 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <input
-                name="name"
-                type="text"
-                required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Full name"
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <input
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <input
-                name="password"
-                type="password"
-                required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <input
-                name="confirmPassword"
-                type="password"
-                required
-                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
+    <div className="auth-page">
+      <div className="auth-card">
+        <h2 className="auth-title">Create your account</h2>
+        <p className="auth-sub">Join CivicConnect to report and track issues in your neighborhood.</p>
+
+        {error && <div className="error-box">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-field">
+            <label className="sr-only" htmlFor="name">Full name</label>
+            <input id="name" name="name" type="text" required className="form-input" placeholder="Full name" value={formData.name} onChange={handleChange} />
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-            >
-              {loading ? 'Creating account...' : 'Sign up'}
-            </button>
+          <div className="form-field">
+            <label className="sr-only" htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" required className="form-input" placeholder="Email address" value={formData.email} onChange={handleChange} />
           </div>
 
-          <div className="text-center">
-            <Link to="/login" className="text-blue-600 hover:text-blue-500">
-              Already have an account? Sign in
-            </Link>
+          <div className="form-field">
+            <label className="sr-only" htmlFor="password">Password</label>
+            <input id="password" name="password" type="password" required className="form-input" placeholder="Password" value={formData.password} onChange={handleChange} />
+          </div>
+
+          <div className="form-field">
+            <label className="sr-only" htmlFor="confirmPassword">Confirm password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" required className="form-input" placeholder="Confirm password" value={formData.confirmPassword} onChange={handleChange} />
+          </div>
+
+          <div className="form-field">
+            <label className="sr-only" htmlFor="role">Role</label>
+            <select id="role" name="role" className="form-input" value={formData.role} onChange={handleChange}>
+              <option value="citizen">Citizen</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div className="form-actions">
+            <button type="submit" disabled={loading} className="nav-button">{loading ? 'Creating account...' : 'Sign up'}</button>
+            <div style={{ marginLeft: 'auto' }}> <Link to="/login" className="form-link">Already have an account? Sign in</Link></div>
           </div>
         </form>
       </div>

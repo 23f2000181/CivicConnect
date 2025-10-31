@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import BrowseIssues from './pages/BrowseIssues';
+import IssueDetails from './pages/IssueDetails';
 
 function App() {
   return (
@@ -22,7 +23,7 @@ function App() {
               <Route path="/issues" element={<BrowseIssues />} />
               {/* Add these routes later */}
               <Route path="/report" element={<div className="container mx-auto px-4 py-8 text-center">Report Issue Page - Coming Soon</div>} />
-              <Route path="/issues/:id" element={<div className="container mx-auto px-4 py-8 text-center">Issue Details - Coming Soon</div>} />
+              <Route path="/issues/:id" element={<IssueDetails />} />
             </Routes>
           </main>
           <Footer />
