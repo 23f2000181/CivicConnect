@@ -77,7 +77,7 @@ const BrowseIssues = () => {
       priority: 'critical',
       upvoteCount: 42,
       reportedBy: { name: 'Rakesh Sharma' },
-      images: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1200&auto=format&fit=crop']
+      images: ['https://images.unsplash.com/photo-1586728595683-3e9a4d9a9152?q=80&w=1400&auto=format&fit=crop']
     },
     {
       _id: null,
@@ -88,7 +88,7 @@ const BrowseIssues = () => {
       priority: 'high',
       upvoteCount: 18,
       reportedBy: { name: 'Ananya Gupta' },
-      images: ['https://images.unsplash.com/photo-1483347756197-71ef80e95f73?q=80&w=1200&auto=format&fit=crop']
+      images: ['https://images.unsplash.com/photo-1542349314-e3b0a1bcd0d3?q=80&w=1400&auto=format&fit=crop']
     },
     {
       _id: null,
@@ -99,7 +99,7 @@ const BrowseIssues = () => {
       priority: 'medium',
       upvoteCount: 9,
       reportedBy: { name: 'Priya Verma' },
-      images: ['https://images.unsplash.com/photo-1582401651889-42e9fa7c5a7a?q=80&w=1200&auto=format&fit=crop']
+      images: ['https://images.unsplash.com/photo-1608571424021-2d4dfdc2621d?q=80&w=1400&auto=format&fit=crop']
     }
   ];
 
@@ -124,58 +124,52 @@ const BrowseIssues = () => {
                 {...cardProps}
                 className="card block text-inherit hover:no-underline overflow-hidden"
               >
+                {/* Image with overlays */}
                 <div className="relative mb-4">
                   {issue.images && issue.images.length > 0 ? (
                     <img
                       src={issue.images[0].url || issue.images[0]}
                       alt={issue.title}
+                      loading="lazy"
                       className="issue-image"
                     />
                   ) : (
                     <div className="issue-image" style={{ background: 'linear-gradient(180deg, #e5e7eb, #f3f4f6)' }} />
                   )}
+                  <div className="image-gradient" />
+                  <div className="image-overlay-top-right flex gap-2">
+                    <span className={`badge ${getStatusColor(issue.status || 'pending')}`}>{(issue.status || 'pending').replace('_', ' ')}</span>
+                    <span className={`badge ${getPriorityColor(issue.priority || 'medium')}`}>{issue.priority || 'medium'}</span>
+                  </div>
                   {isFlagged(issue) && (
-                    <span className="badge bg-red-100 text-red-700 absolute top-2 left-2">Flagged</span>
+                    <span className="badge bg-red-100 text-red-700 image-overlay-top-left">Flagged</span>
                   )}
                 </div>
 
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-xl font-semibold text-gray-900 line-clamp-1">{issue.title}</h3>
-                  <div className="flex space-x-2">
-                    <span className={`badge ${getStatusColor(issue.status || 'pending')}`}>
-                      {(issue.status || 'pending').replace('_', ' ')}
-                    </span>
-                    <span className={`badge ${getPriorityColor(issue.priority || 'medium')}`}>
-                      {issue.priority || 'medium'}
-                    </span>
-                  </div>
-                </div>
-
+                {/* Title and description */}
+                <h3 className="text-xl font-semibold text-gray-900 mb-1 line-clamp-1">{issue.title}</h3>
                 <p className="text-gray-600 mb-4 line-clamp-3">{issue.description}</p>
 
+                {/* Meta and actions */}
                 <div className="flex justify-between items-center text-sm text-gray-500">
                   <div>
                     <span className="capitalize">{(issue.category || 'other').replace('_', ' ')}</span>
                     {issue.location?.address && (
                       <span> • {issue.location.address}</span>
                     )}
+                    <span> • Reported by {issue.reportedBy?.name || 'Community Member'}</span>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={(e) => handleUpvote(e, issue._id)}
-                      className="nav-button"
-                      disabled={upvotingId === issue._id}
-                      aria-label="Upvote issue"
-                    >
-                      <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M12 5l6 6H6l6-6z" />
-                      </svg>
-                      <span>{upvotingId === issue._id ? 'Voting…' : (issue.upvoteCount || 0)}</span>
-                    </button>
-                    <span>
-                      Reported by {issue.reportedBy?.name || 'Community Member'}
-                    </span>
-                  </div>
+                  <button
+                    onClick={(e) => handleUpvote(e, issue._id)}
+                    className="chip chip-ghost"
+                    disabled={upvotingId === issue._id}
+                    aria-label="Upvote issue"
+                  >
+                    <svg className="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5l6 6H6l6-6z" />
+                    </svg>
+                    {upvotingId === issue._id ? 'Voting…' : (issue.upvoteCount || 0)}
+                  </button>
                 </div>
               </CardWrapper>
             );
