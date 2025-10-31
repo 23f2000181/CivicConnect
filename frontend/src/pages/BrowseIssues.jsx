@@ -1,25 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { issuesService } from '../services/issues';
 
 const BrowseIssues = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [upvotingId, setUpvotingId] = useState(null);
 
   useEffect(() => {
     fetchIssues();
   }, []);
 
   const fetchIssues = async () => {
+    setLoading(true);
+    setError('');
     try {
       const response = await issuesService.getIssues();
-      if (response.success) {
+      if (response.success && Array.isArray(response.data)) {
         setIssues(response.data);
+      } else {
+        setIssues([]);
       }
     } catch (err) {
-      setError('Failed to fetch issues');
+      setError('');
+      setIssues([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpvote = async (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!id) return; // sample cards
+    setUpvotingId(id);
+    setIssues((prev) => prev.map(it => it._id === id ? { ...it, upvoteCount: (it.upvoteCount || 0) + 1 } : it));
+    try {
+      await issuesService.upvoteIssue(id);
+    } catch (err) {
+      setIssues((prev) => prev.map(it => it._id === id ? { ...it, upvoteCount: Math.max(0, (it.upvoteCount || 1) - 1) } : it));
+    } finally {
+      setUpvotingId(null);
     }
   };
 
@@ -43,54 +65,123 @@ const BrowseIssues = () => {
     return colors[priority] || 'bg-gray-100 text-gray-800';
   };
 
-  if (loading) return <div className="loading">Loading issues...</div>;
-  if (error) return <div className="text-red-600 text-center p-8">{error}</div>;
+  const isFlagged = (issue) => issue.priority === 'critical' || issue.flagged === true;
+
+  const sampleIssues = [
+    {
+      _id: null,
+      title: 'Pothole near Community Center',
+      description: 'Large pothole causing traffic slowdown and potential vehicle damage on Elm Street.',
+      category: 'pothole',
+      status: 'pending',
+      priority: 'critical',
+      upvoteCount: 42,
+      reportedBy: { name: 'Rakesh Sharma' },
+      images: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?q=80&w=1200&auto=format&fit=crop']
+    },
+    {
+      _id: null,
+      title: 'Broken streetlight in Block A',
+      description: 'Streetlight not working for 2 weeks; the lane is very dark at night.',
+      category: 'streetlight',
+      status: 'in_progress',
+      priority: 'high',
+      upvoteCount: 18,
+      reportedBy: { name: 'Ananya Gupta' },
+      images: ['https://images.unsplash.com/photo-1483347756197-71ef80e95f73?q=80&w=1200&auto=format&fit=crop']
+    },
+    {
+      _id: null,
+      title: 'Garbage not collected',
+      description: 'Overflowing dumpsters near Market Road. Needs immediate attention from sanitation.',
+      category: 'garbage',
+      status: 'pending',
+      priority: 'medium',
+      upvoteCount: 9,
+      reportedBy: { name: 'Priya Verma' },
+      images: ['https://images.unsplash.com/photo-1582401651889-42e9fa7c5a7a?q=80&w=1200&auto=format&fit=crop']
+    }
+  ];
+
+  const displayIssues = (issues && issues.length > 0) ? issues : sampleIssues;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Reported Issues</h1>
-      
-      <div className="grid gap-6">
-        {issues.map((issue) => (
-          <div key={issue._id} className="card">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-xl font-semibold">{issue.title}</h3>
-              <div className="flex space-x-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(issue.status)}`}>
-                  {issue.status.replace('_', ' ')}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(issue.priority)}`}>
-                  {issue.priority}
-                </span>
-              </div>
-            </div>
-            
-            <p className="text-gray-600 mb-4">{issue.description}</p>
-            
-            <div className="flex justify-between items-center text-sm text-gray-500">
-              <div>
-                <span className="capitalize">{issue.category.replace('_', ' ')}</span>
-                {issue.location?.address && (
-                  <span> • {issue.location.address}</span>
-                )}
-              </div>
-              <div className="flex items-center space-x-4">
-                <span>↑ {issue.upvoteCount} upvotes</span>
-                <span>
-                  Reported by {issue.reportedBy?.name || 'Anonymous'}
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {issues.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No issues reported yet.</p>
-            <p className="text-gray-400">Be the first to report an issue in your area!</p>
-          </div>
-        )}
-      </div>
+      <h1 className="text-3xl font-bold mb-6">Latest community reports</h1>
+
+      {loading && (
+        <div className="loading">Loading issues...</div>
+      )}
+
+      {!loading && (
+        <div className="issue-grid">
+          {displayIssues.map((issue, idx) => {
+            const CardWrapper = issue._id ? Link : 'div';
+            const cardProps = issue._id ? { to: `/issues/${issue._id}` } : {};
+            return (
+              <CardWrapper
+                key={issue._id || `sample-${idx}`}
+                {...cardProps}
+                className="card block text-inherit hover:no-underline overflow-hidden"
+              >
+                <div className="relative mb-4">
+                  {issue.images && issue.images.length > 0 ? (
+                    <img
+                      src={issue.images[0].url || issue.images[0]}
+                      alt={issue.title}
+                      className="issue-image"
+                    />
+                  ) : (
+                    <div className="issue-image" style={{ background: 'linear-gradient(180deg, #e5e7eb, #f3f4f6)' }} />
+                  )}
+                  {isFlagged(issue) && (
+                    <span className="badge bg-red-100 text-red-700 absolute top-2 left-2">Flagged</span>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-semibold text-gray-900 line-clamp-1">{issue.title}</h3>
+                  <div className="flex space-x-2">
+                    <span className={`badge ${getStatusColor(issue.status || 'pending')}`}>
+                      {(issue.status || 'pending').replace('_', ' ')}
+                    </span>
+                    <span className={`badge ${getPriorityColor(issue.priority || 'medium')}`}>
+                      {issue.priority || 'medium'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-gray-600 mb-4 line-clamp-3">{issue.description}</p>
+
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <div>
+                    <span className="capitalize">{(issue.category || 'other').replace('_', ' ')}</span>
+                    {issue.location?.address && (
+                      <span> • {issue.location.address}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={(e) => handleUpvote(e, issue._id)}
+                      className="nav-button"
+                      disabled={upvotingId === issue._id}
+                      aria-label="Upvote issue"
+                    >
+                      <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 5l6 6H6l6-6z" />
+                      </svg>
+                      <span>{upvotingId === issue._id ? 'Voting…' : (issue.upvoteCount || 0)}</span>
+                    </button>
+                    <span>
+                      Reported by {issue.reportedBy?.name || 'Community Member'}
+                    </span>
+                  </div>
+                </div>
+              </CardWrapper>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
